@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="final_work.TilastoTaulukko"
+             Title="Tulostaulu">
+
+    <StackLayout>
+        <!-- Voit lisätä tarvittavat XAML-elementit tähän, esimerkiksi ListViewin pelaajien tilastojen näyttämiseen -->
+
+        <ListView x:Name="TilastoListView">
+            <ListView.Header>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="1*" />
+                        <ColumnDefinition Width="1*" />
+                        <ColumnDefinition Width="1*" />
+                        <ColumnDefinition Width="2*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Label Text="Nimi" Grid.Column="0" />
+                    <Label Text="Voitot" Grid.Column="1" />
+                    <Label Text="Tappiot" Grid.Column="2" />
+                    <Label Text="Tasapelit" Grid.Column="3" />
+                    <Label Text="Pelien yhteiskesto" Grid.Column="4" />
+                </Grid>
+            </ListView.Header>
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <ViewCell>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*" />
+                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="2*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Label Text="{Binding Etunimi} " Grid.Column="0" />
+                            <Label Text="{Binding Voitot}" Grid.Column="1" />
+                            <Label Text="{Binding Tappiot}" Grid.Column="2" />
+                            <Label Text="{Binding Tasapelit}" Grid.Column="3" />
+                            <Label Text="{Binding MuotoiltuPelienYhteiskesto}" Grid.Column="4" />
+                        </Grid>
+                    </ViewCell>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </StackLayout>
+</ContentPage>

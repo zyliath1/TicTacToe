@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="final_work.PeliSivu"
+             Title="Ristinolla">
+
+    <StackLayout VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand">
+        <Label x:Name="VasenVuoroLabel" HorizontalOptions="StartAndExpand" VerticalOptions="CenterAndExpand" />
+        <Label x:Name="OikeaVuoroLabel" HorizontalOptions="EndAndExpand" VerticalOptions="CenterAndExpand" />
+        <Grid x:Name="PelilautaGrid" WidthRequest="600" HeightRequest="600">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="Ruutu00" Grid.Row="0" Grid.Column="0" Clicked="RuutuClicked" ClassId="0,0" FontSize="150"/>
+            <Button x:Name="Ruutu01" Grid.Row="0" Grid.Column="1" Clicked="RuutuClicked" ClassId="0,1" FontSize="150"/>
+            <Button x:Name="Ruutu02" Grid.Row="0" Grid.Column="2" Clicked="RuutuClicked" ClassId="0,2" FontSize="150"/>
+            <Button x:Name="Ruutu10" Grid.Row="1" Grid.Column="0" Clicked="RuutuClicked" ClassId="1,0" FontSize="150"/>
+            <Button x:Name="Ruutu11" Grid.Row="1" Grid.Column="1" Clicked="RuutuClicked" ClassId="1,1" FontSize="150"/>
+            <Button x:Name="Ruutu12" Grid.Row="1" Grid.Column="2" Clicked="RuutuClicked" ClassId="1,2" FontSize="150"/>
+            <Button x:Name="Ruutu20" Grid.Row="2" Grid.Column="0" Clicked="RuutuClicked" ClassId="2,0" FontSize="150"/>
+            <Button x:Name="Ruutu21" Grid.Row="2" Grid.Column="1" Clicked="RuutuClicked" ClassId="2,1" FontSize="150"/>
+            <Button x:Name="Ruutu22" Grid.Row="2" Grid.Column="2" Clicked="RuutuClicked" ClassId="2,2" FontSize="150"/>
+        </Grid>
+            <Button Text="Pelaa uudelleen" Clicked="UusiPeli"/>
+    </StackLayout>
+</ContentPage>
