@@ -4,18 +4,22 @@ namespace final_work
 {
     public partial class TilastoTaulukko : ContentPage
     {
+        // PelaajaHallinta-instanssi tiedostoon tallennusta ja latausta varten.
         private PelaajaHallinta pelaajaHallinta = new PelaajaHallinta(new TiedostoPelaajanTallennus());
 
+        // Kokoelma, joka pit‰‰ kirjaa pelaajien tilastoista ja p‰ivitt‰‰ ne automaattisesti.
         public ObservableCollection<Pelaaja> PelaajaTilastot { get; set; } = new ObservableCollection<Pelaaja>();
 
-        public TilastoTaulukko(List<Pelaaja> initialPelaajat)
+        // Konstruktori, joka alustaa tilastotaulukon sivun ja lataa pelaajatilastot.
+        public TilastoTaulukko(List<Pelaaja> listallaOlevatPelaajat)
         {
             InitializeComponent();
             TilastoListView.ItemsSource = PelaajaTilastot;
 
-            if (initialPelaajat != null && initialPelaajat.Count > 0)
+            // Lataa pelaajatilastot joko annetusta listasta tai tiedostosta.
+            if (listallaOlevatPelaajat != null && listallaOlevatPelaajat.Count > 0)
             {
-                LataaPelaajatilastot(initialPelaajat);
+                LataaPelaajatilastot(listallaOlevatPelaajat);
             }
             else
             {
@@ -23,15 +27,16 @@ namespace final_work
             }
         }
 
+        // P‰ivitt‰‰ annetun pelaajan tilastot kokoelmassa ja tallentaa muutokset tiedostoon.
         public void P‰ivit‰PelaajaTilastot(Pelaaja pelaaja)
         {
-            var existingPlayer = PelaajaTilastot.FirstOrDefault(p => p.Etunimi == pelaaja.Etunimi && p.Sukunimi == pelaaja.Sukunimi);
-            if (existingPlayer != null)
+            var nykyinenPelaaja = PelaajaTilastot.FirstOrDefault(p => p.Etunimi == pelaaja.Etunimi && p.Sukunimi == pelaaja.Sukunimi);
+            if (nykyinenPelaaja != null)
             {
-                existingPlayer.Voitot = pelaaja.Voitot;
-                existingPlayer.Tappiot = pelaaja.Tappiot;
-                existingPlayer.Tasapelit = pelaaja.Tasapelit;
-                existingPlayer.PelienYhteiskesto = pelaaja.PelienYhteiskesto;
+                nykyinenPelaaja.Voitot = pelaaja.Voitot;
+                nykyinenPelaaja.Tappiot = pelaaja.Tappiot;
+                nykyinenPelaaja.Tasapelit = pelaaja.Tasapelit;
+                nykyinenPelaaja.PelienYhteiskesto = pelaaja.PelienYhteiskesto;
             }
             else
             {
@@ -41,12 +46,14 @@ namespace final_work
             pelaajaHallinta.P‰ivit‰TaiLis‰‰Pelaaja(pelaaja);
         }
 
+        // Lataa pelaajatilastot tiedostosta.
         private void LataaPelaajatilastot()
         {
             var pelaajat = pelaajaHallinta.LataaPelaajat();
             LataaPelaajatilastot(pelaajat);
         }
 
+        // P‰ivitt‰‰ pelaajatilastot kokoelmaa annetulla pelaajalistan perusteella.
         private void LataaPelaajatilastot(List<Pelaaja> latausPelaajat)
         {
             foreach (var pelaaja in latausPelaajat)

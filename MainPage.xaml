@@ -7,24 +7,24 @@
 
         <Entry x:Name="EtunimiEntry" Placeholder="Etunimi" />
         <Entry x:Name="SukunimiEntry" Placeholder="Sukunimi" />
-        <Entry x:Name="SyntymaVuosiEntry" Placeholder="Syntymävuosi" Keyboard="Numeric"/>
+        <Entry x:Name="SyntymäVuosiEntry" Placeholder="Syntymävuosi" Keyboard="Numeric" />
 
         <Picker x:Name="PelaajaPicker" ItemsSource="{Binding PelaajatNimet}" Title="Valitse pelaaja">
             <!-- Pelaajat lisätään koodissa -->
         </Picker>
 
         <Label Text="Valitse vastustaja:" />
-        
-        <RadioButton x:Name="ToinenPelaajaRadio" Content="Toinen pelaaja" GroupName="VastustajaValinta" CheckedChanged="OnVastustajaValintaChanged"/>
+
+        <RadioButton x:Name="ToinenPelaajaRadio" Content="Toinen pelaaja" GroupName="VastustajaValinta" CheckedChanged="OnVastustajaValintaChanged" />
 
         <Picker x:Name="VastustajaPicker" ItemsSource="{Binding PelaajatNimet}" Title="Valitse vastustaja" IsVisible="False">
             <!-- Vastustajat lisätään koodissa -->
         </Picker>
-        
-        <RadioButton x:Name="TietokoneRadio" Content="Tietokone" IsChecked="True" GroupName="VastustajaValinta" CheckedChanged="OnVastustajaValintaChanged"/>
+
+        <RadioButton x:Name="TietokoneRadio" Content="Tietokone" IsChecked="True" GroupName="VastustajaValinta" CheckedChanged="OnVastustajaValintaChanged" />
 
         <Button Text="Tallenna tiedot" Clicked="TallennaTiedotClicked" />
         <Button Text="Aloita peli" Clicked="AloitaPeliClicked" />
-        <Button Text="Tulostaulu" Clicked="TilastoTaulukko_Clicked"  />
+        <Button Text="Tulostaulu" Clicked="TilastoTaulukko_Clicked" />
     </StackLayout>
 </ContentPage>

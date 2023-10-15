@@ -1,25 +1,29 @@
-﻿using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Text.Json;
 
 namespace final_work
 {
     public partial class MainPage : ContentPage
     {
+        // Tämä on pelaajien hallinta, joka lataa ja tallentaa pelaajat tiedostoon (JSON)
         private readonly PelaajaHallinta _pelaajaHallinta;
+
+        // Tämä on pelaajien nimet, jotka näytetään pudotusvalikossa (Picker)
         public ObservableCollection<string> PelaajatNimet { get; set; } = new ObservableCollection<string>();
 
         public MainPage()
         {
             InitializeComponent();
 
-            var tallennusPalvelu = new TiedostoPelaajanTallennus();
-            _pelaajaHallinta = new PelaajaHallinta(tallennusPalvelu);
+            // Lataa pelaajat
+            var tallennus = new TiedostoPelaajanTallennus();
+            _pelaajaHallinta = new PelaajaHallinta(tallennus);
 
+            // Lataa vastustajan valinta JSON-tiedostosta
             this.BindingContext = this;
             PelaajatNimet.Clear();
 
+            // Lataa pelaajat ja lisää ne listaan
             foreach (var pelaaja in _pelaajaHallinta.LataaPelaajat())
             {
                 if (pelaaja.Etunimi != "Tietokone")
@@ -29,12 +33,14 @@ namespace final_work
             }
         }
 
+        // Tämä on staattinen tietokonepelaaja, jotta sitä ei koskaan muuteta
         public static readonly Pelaaja TietokonePelaaja = new Pelaaja
         {
             Etunimi = "Tietokone",
             PelaajaId = Guid.Empty
         };
 
+        // Käsittelee aloita peli -napin painalluksen ja aloittaa pelin valitun pelaajan ja vastustajan kanssa (tietokone tai toinen pelaaja)
         private async void AloitaPeliClicked(object sender, EventArgs e)
         {
             if (PelaajaPicker.SelectedItem == null)
@@ -43,56 +49,70 @@ namespace final_work
                 return;
             }
 
-            var selectedPlayerName = PelaajaPicker.SelectedItem.ToString();
-            var nameParts = selectedPlayerName.Split(' ');
-            if (nameParts.Length != 2)
+            // Tarkistaa onko pelaaja jo listalla
+            var valitunPelaajanNimi = PelaajaPicker.SelectedItem.ToString();
+            var nimenOsat = JaaNimi(valitunPelaajanNimi);
+            if (nimenOsat == null)
             {
                 await DisplayAlert("Virhe", "Virheellinen nimi.", "OK");
                 return;
             }
-            var selectedPlayer = _pelaajaHallinta.HaePelaaja(nameParts[0], nameParts[1]);
+            var valittuPelaaja = _pelaajaHallinta.HaePelaaja(nimenOsat[0], nimenOsat[1]);
 
-
-            Pelaaja vastustaja;
-
-            if (TietokoneRadio.IsChecked)
+            Pelaaja vastustaja = await ValitseVastustaja(valittuPelaaja);
+            if (vastustaja == null) // Tässä oletetaan, että ValitseVastustaja palauttaa null, jos on ongelma.
             {
-                vastustaja = TietokonePelaaja;
+                // Virheilmoitus käsitellään ValitseVastustaja metodissa.
+                return;
             }
 
-            else
-            {
-                if (VastustajaPicker.SelectedItem == null)
-                {
-                    await DisplayAlert("Virhe", "Valitse vastustaja.", "OK");
-                    return;
-                }
-
-                var selectedOpponentName = VastustajaPicker.SelectedItem.ToString();
-                var opponentNameParts = selectedOpponentName.Split(' ');
-                if (opponentNameParts.Length != 2)
-                {
-                    await DisplayAlert("Virhe", "Virheellinen nimi.", "OK");
-                    return;
-                }
-                vastustaja = _pelaajaHallinta.HaePelaaja(opponentNameParts[0], opponentNameParts[1]);
-
-                // Käytetään Id:tä vertailussa, koska muuten ei toimi
-                if (selectedPlayer.PelaajaId == vastustaja.PelaajaId)
-                {
-                    await DisplayAlert("Virhe", "Et voi pelata itseäsi vastaan.", "OK");
-                    return;
-                }
-            }
-
-            await Navigation.PushAsync(new PeliSivu(selectedPlayer, vastustaja));
+            await Navigation.PushAsync(new PeliSivu(valittuPelaaja, vastustaja));
         }
 
+        // Tämä palauttaa pelaajan etu- ja sukunimen osiin pilkulla eroteltuna
+        private string[] JaaNimi(string pelaajanNimi)
+        {
+            var nimenOsat = pelaajanNimi.Split(' ');
+            return nimenOsat.Length == 2 ? nimenOsat : null;
+        }
 
+        // Valitsee vastustajan pelaajan valinnan mukaan (tietokone tai toinen pelaaja)
+        private async Task<Pelaaja> ValitseVastustaja(Pelaaja valittuPelaaja)
+        {
+            if (TietokoneRadio.IsChecked)
+            {
+                return TietokonePelaaja;
+            }
+
+            if (VastustajaPicker.SelectedItem == null)
+            {
+                await DisplayAlert("Virhe", "Valitse vastustaja.", "OK");
+                return null;
+            }
+
+            var valitunPelaajanNimi = VastustajaPicker.SelectedItem.ToString();
+            var vastustajanNimenOsat = JaaNimi(valitunPelaajanNimi);
+            if (vastustajanNimenOsat == null)
+            {
+                await DisplayAlert("Virhe", "Virheellinen nimi.", "OK");
+                return null;
+            }
+
+            var vastustaja = _pelaajaHallinta.HaePelaaja(vastustajanNimenOsat[0], vastustajanNimenOsat[1]);
+
+            if (valittuPelaaja.PelaajaId == vastustaja.PelaajaId)
+            {
+                await DisplayAlert("Virhe", "Et voi pelata itseäsi vastaan.", "OK");
+                return null;
+            }
+            return vastustaja;
+        }
+
+        // Käsittelee vastustajan valinnan muutoksen
         private void OnVastustajaValintaChanged(object sender, CheckedChangedEventArgs e)
         {
             VastustajaPicker.IsVisible = ToinenPelaajaRadio.IsChecked;
-            
+
             if (TietokoneRadio.IsChecked == true)
             {
                 TallennaVastustajaJsoniin("tietokone");
@@ -103,55 +123,51 @@ namespace final_work
         {
             string userFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             string jsonFilePath = Path.Combine(userFolderPath, "pelaajat.json");
-            JToken token;
+            Dictionary<string, string> data;
 
-            // Load the current JSON file (if it exists)
-            if (File.Exists(jsonFilePath))
+            try
             {
-                using (StreamReader file = File.OpenText(jsonFilePath))
-                using (JsonTextReader reader = new JsonTextReader(file))
-                {
-                    token = JToken.ReadFrom(reader);
-                }
+                // Yritä lukea tiedostoa suoraan ja käsittele poikkeus, jos tiedostoa ei ole olemassa
+                var content = File.ReadAllText(jsonFilePath);
+                data = JsonSerializer.Deserialize<Dictionary<string, string>>(content);
             }
-            else
+            catch (FileNotFoundException)
             {
-                token = new JObject();
+                // Jos tiedostoa ei ole olemassa, luo uusi Dictionary
+                data = new Dictionary<string, string>();
             }
-
-            // If the content is a JObject
-            if (token is JObject json)
+            catch (Exception ex)
             {
-                // Set or update the opponent
-                json["vastustaja"] = vastustaja;
-            }
-            else if (token is JArray jsonArray)
-            {
-                // If the content is a JArray
-                // Handle this case based on your requirements.
-                // For example, you can create a new JObject and add it to the JArray.
-                var newObject = new JObject();
-                newObject["vastustaja"] = vastustaja;
-                jsonArray.Add(newObject);
-                token = jsonArray; // Use the updated JArray as the token to write back to the file.
-            }
-            else
-            {
-                // Handle other types or throw an exception
-                throw new InvalidDataException("Unexpected JSON token type.");
+                // Muut mahdolliset poikkeukset, esim. tiedoston lukuongelmat
+                Console.WriteLine($"Virhe tiedoston luvussa: {ex.Message}");
+                return;
             }
 
-            // Save the updated JSON file
-            File.WriteAllText(jsonFilePath, token.ToString());
+            // Aseta tai päivitä vastustaja
+            data["vastustaja"] = vastustaja;
+
+            // Tallenna päivitetty JSON-tiedosto siististi muotoiltuna
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true
+            };
+            var jsonContent = JsonSerializer.Serialize(data, options);
+            File.WriteAllText(jsonFilePath, jsonContent);
         }
 
-
+        // Tämä käsittelee pelaajan valinnan muutoksen ja tallentaa valinnan JSON-tiedostoon
         private async void TallennaTiedotClicked(object sender, EventArgs e)
         {
             string etunimi = EtunimiEntry.Text;
             string sukunimi = SukunimiEntry.Text;
 
-            if (!int.TryParse(SyntymaVuosiEntry.Text, out int syntymavuosi))
+            if (string.IsNullOrWhiteSpace(etunimi) || string.IsNullOrWhiteSpace(sukunimi))
+            {
+                await DisplayAlert("Virhe", "Syötä etu- ja sukunimi!", "OK");
+                return;
+            }
+
+            if (!int.TryParse(SyntymäVuosiEntry.Text, out int syntymävuosi))
             {
                 await DisplayAlert("Virhe", "Syötä kelvollinen syntymävuosi!", "OK");
                 return;
@@ -166,11 +182,12 @@ namespace final_work
                 return;
             }
 
+            // Luo uusi pelaaja ja tallenna se tiedostoon
             var uusiPelaaja = new Pelaaja
             {
                 Etunimi = etunimi,
                 Sukunimi = sukunimi,
-                Syntymävuosi = syntymavuosi,
+                Syntymävuosi = syntymävuosi,
                 Voitot = 0,
                 Tappiot = 0,
                 Tasapelit = 0,
@@ -180,11 +197,11 @@ namespace final_work
             TallennaPelaaja(uusiPelaaja);
             EtunimiEntry.Text = "";
             SukunimiEntry.Text = "";
-            SyntymaVuosiEntry.Text = "";
+            SyntymäVuosiEntry.Text = "";
             await DisplayAlert("Vahvistus", "Tiedot tallennettu onnistuneesti!", "OK");
         }
 
-        // Käytä tätä metodia kun haluat tallentaa tai päivittää pelaajan
+        // Tallentaa pelaajan tiedot tiedostoon ja lisää pelaajan nimen pudotusvalikkoon
         private void TallennaPelaaja(Pelaaja pelaaja)
         {
             try
@@ -205,6 +222,7 @@ namespace final_work
             }
         }
 
+        // Näyttää tilastotaulukon pelaajista ja heidän tilastoistaan (voitot, tappiot, tasapelit, pelien yhteiskesto)
         private void TilastoTaulukko_Clicked(object sender, EventArgs e)
         {
             var pelaajat = _pelaajaHallinta.LataaPelaajat();

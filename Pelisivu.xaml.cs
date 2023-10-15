@@ -21,19 +21,39 @@ namespace final_work
             _pelaaja1 = pelaaja1;
             _pelaaja2 = pelaaja2;
 
+            LataaPelaajatTiedostosta();
+
             // Aseta random pelaaja aloittavaksi pelaajaksi
             _vuorossa = _rand.Next(2) == 0 ? _pelaaja1 : _pelaaja2;
 
             AlustaPeli();
 
+            // Luo tilastotaulukko ja lisää pelaajat siihen
             tilastoTaulukkoInstance = new TilastoTaulukko(new List<Pelaaja> { _pelaaja1, _pelaaja2 });
 
             if (OnkoTietokoneenVuoro())
             {
                 TietokoneenSiirto();
             }
+            _peliajanotto.Start();
         }
 
+        // Lataa pelaajat tiedostosta, jos tiedosto on olemassa
+        private void LataaPelaajatTiedostosta()
+        {
+            string tiedostoPolku = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "pelaajat.json");
+
+            if (File.Exists(tiedostoPolku))
+            {
+                var sisältö = File.ReadAllText(tiedostoPolku);
+                List<Pelaaja> pelaajatilastot = JsonSerializer.Deserialize<List<Pelaaja>>(sisältö);
+
+                _pelaaja1 = pelaajatilastot.FirstOrDefault(p => p.Etunimi == _pelaaja1.Etunimi && p.Sukunimi == _pelaaja1.Sukunimi) ?? _pelaaja1;
+                _pelaaja2 = pelaajatilastot.FirstOrDefault(p => p.Etunimi == _pelaaja2.Etunimi && p.Sukunimi == _pelaaja2.Sukunimi) ?? _pelaaja2;
+            }
+        }
+
+        // Alustaa pelilaudan tyhjäksi ja asettaa vuorossa olevan pelaajan UI:hin näkyviin
         private void AlustaPeli()
         {
             for (int i = 0; i < 3; i++)
@@ -47,7 +67,7 @@ namespace final_work
             UpdateUI();
         }
 
-
+        // Päivittää vuorossa olevan pelaajan UI:hin näkyviin
         private void UpdateUI()
         {
             VasenVuoroLabel.Text = _vuorossa == _pelaaja1
@@ -59,6 +79,7 @@ namespace final_work
                 : "";
         }
 
+        // Kutsutaan kun ruutua klikataan ja merkitsee ruudun vuorossa olevan pelaajan merkillä (X tai O)
         public void RuutuClicked(object sender, EventArgs e)
         {
             if (sender is Button klikattuNappi && !string.IsNullOrEmpty(klikattuNappi.ClassId) && _vuorossa != null && _vuorossa.Etunimi != "Tietokone")
@@ -73,7 +94,7 @@ namespace final_work
                     _pelilauta[x, y] = _vuorossa == _pelaaja1 ? "X" : "O";
                     klikattuNappi.Text = _pelilauta[x, y];
 
-                    UpdateGameState();
+                    PäivitäPelinTila();
 
                     if (_vuorossa == _pelaaja1 && _pelaaja2.Etunimi == "Tietokone" || _vuorossa == _pelaaja2 && _pelaaja1.Etunimi == "Tietokone")
                         TietokoneenSiirto();
@@ -81,13 +102,15 @@ namespace final_work
             }
         }
 
-        private void UpdateGameState()
+        // Tarkista onko peli päättynyt ja päivittää pelitilanteen sen mukaan (voitto, tasapeli, jatkuu)
+        private void PäivitäPelinTila()
         {
             if (OnkoVoittaja())
             {
                 _peliajanotto.Stop();
                 var kulunutAika = _peliajanotto.Elapsed;
-                _vuorossa.LisääPeliaika(kulunutAika);
+                _pelaaja1.LisääPeliaika(kulunutAika);
+                _pelaaja2.LisääPeliaika(kulunutAika);
 
                 string voittoViesti = _vuorossa.Etunimi == "Tietokone"
                     ? "Tietokone voitti!"
@@ -95,7 +118,7 @@ namespace final_work
 
                 DisplayAlert("Onnittelut!", voittoViesti, "OK");
                 _vuorossa.Voitot++;
-                
+
                 tilastoTaulukkoInstance.PäivitäPelaajaTilastot(_vuorossa);
                 if (_vuorossa == _pelaaja1) tilastoTaulukkoInstance.PäivitäPelaajaTilastot(_pelaaja2);
                 else tilastoTaulukkoInstance.PäivitäPelaajaTilastot(_pelaaja1);
@@ -137,6 +160,7 @@ namespace final_work
             }
         }
 
+        // Tallentaa pelin tuloksen tiedostoon pelaajien tilastoihin (voitto, tappio, tasapeli ja pelien yhteiskesto)
         private void TallennaPelinTulos(string viesti)
         {
             string tiedostoPolku = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "pelaajat.json");
@@ -144,8 +168,8 @@ namespace final_work
             List<Pelaaja> pelaajatilastot = new List<Pelaaja>();
             if (File.Exists(tiedostoPolku))
             {
-                var sisalto = File.ReadAllText(tiedostoPolku);
-                pelaajatilastot = JsonSerializer.Deserialize<List<Pelaaja>>(sisalto);
+                var sisältö = File.ReadAllText(tiedostoPolku);
+                pelaajatilastot = JsonSerializer.Deserialize<List<Pelaaja>>(sisältö);
             }
 
             // Tarkista onko pelaaja1 jo listassa
@@ -156,7 +180,6 @@ namespace final_work
             }
             else
             {
-                // Kopioi nykyiset tiedot pelaaja1-oliosta tiedostoon tallennettuun pelaaja1-olioon, jotta et ylikirjoita kaikkia sen tietoja
                 pelaajatilastot[pelaaja1Index].Voitot = _pelaaja1.Voitot;
                 pelaajatilastot[pelaaja1Index].Tappiot = _pelaaja1.Tappiot;
                 pelaajatilastot[pelaaja1Index].Tasapelit = _pelaaja1.Tasapelit;
@@ -170,7 +193,6 @@ namespace final_work
             }
             else
             {
-                // Kopioi nykyiset tiedot pelaaja2-oliosta tiedostoon tallennettuun pelaaja2-olioon, jotta et ylikirjoita kaikkia sen tietoja
                 pelaajatilastot[pelaaja2Index].Voitot = _pelaaja2.Voitot;
                 pelaajatilastot[pelaaja2Index].Tappiot = _pelaaja2.Tappiot;
                 pelaajatilastot[pelaaja2Index].Tasapelit = _pelaaja2.Tasapelit;
@@ -181,25 +203,25 @@ namespace final_work
             File.WriteAllText(tiedostoPolku, päivitettySisältö);
         }
 
-
         private async void TietokoneenSiirto()
         {
+            // Odottaa 0.5 - 2 sekuntia ennen siirtoa
             await Task.Delay(_rand.Next(500, 2000));
 
             int paikkaX, paikkaY;
 
-            // 1. Tarkista, voiko tietokone voittaa seuraavalla siirrollaan
+            // 1. Tarkistaa, voiko tietokone voittaa seuraavalla siirrollaan
             if (EtsiVoittoTaiEstoSiirto(out paikkaX, out paikkaY, _vuorossa))
             {
                 // Siirto löydetty
             }
-            // 2. Tarkista, voiko vastustaja voittaa seuraavalla siirrollaan
+            // 2. Tarkistaa, voiko vastustaja voittaa seuraavalla siirrollaan
             else if (_vuorossa == _pelaaja1 && EtsiVoittoTaiEstoSiirto(out paikkaX, out paikkaY, _pelaaja2) ||
                      _vuorossa == _pelaaja2 && EtsiVoittoTaiEstoSiirto(out paikkaX, out paikkaY, _pelaaja1))
             {
                 // Siirto löydetty
             }
-            // 3. Jos keskellä oleva ruutu on vapaa, valitse se.
+            // 3. Jos keskellä oleva ruutu on vapaa, valitsee sen.
             else if (string.IsNullOrEmpty(_pelilauta[1, 1]))
             {
                 paikkaX = 1;
@@ -224,9 +246,10 @@ namespace final_work
             _pelilauta[paikkaX, paikkaY] = _vuorossa == _pelaaja1 ? "X" : "O";
             button.Text = _pelilauta[paikkaX, paikkaY];
 
-            UpdateGameState();
+            PäivitäPelinTila();
         }
 
+        // Tietokone tarkistaa voiko pelaaja voittaa seuraavalla siirrollaan tai estää vastustajan voiton
         private bool EtsiVoittoTaiEstoSiirto(out int x, out int y, Pelaaja pelaaja)
         {
             string merkki = pelaaja == _pelaaja1 ? "X" : "O";
@@ -253,6 +276,7 @@ namespace final_work
             return false;
         }
 
+        // Tietokone valitsee kulmista vapaan ruudun
         private bool EtsiVapaaKulma(out int x, out int y)
         {
             int[,] kulmat = { { 0, 0 }, { 0, 2 }, { 2, 0 }, { 2, 2 } };
@@ -274,7 +298,6 @@ namespace final_work
             y = -1;
             return false;
         }
-
 
         private void UusiPeli(object sender, EventArgs e)
         {
@@ -306,11 +329,11 @@ namespace final_work
             }
         }
 
+        // Etsi ruudun pelilaudalta koordinaattien perusteella (esim. Ruutu01)
         private Button FindButtonByCoordinates(int x, int y)
         {
             return (Button)this.FindByName($"Ruutu{x}{y}");
         }
-
 
         private bool OnkoVoittaja()
         {
@@ -370,5 +393,3 @@ namespace final_work
         }
     }
 }
-
-

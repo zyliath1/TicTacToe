@@ -5,8 +5,6 @@
              Title="Tulostaulu">
 
     <StackLayout>
-        <!-- Voit lisätä tarvittavat XAML-elementit tähän, esimerkiksi ListViewin pelaajien tilastojen näyttämiseen -->
-
         <ListView x:Name="TilastoListView">
             <ListView.Header>
                 <Grid>

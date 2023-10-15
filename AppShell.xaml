@@ -10,5 +10,4 @@
         Title="Harjoitustyö ristinolla"
         ContentTemplate="{DataTemplate local:MainPage}"
         Route="MainPage" />
-
 </Shell>
