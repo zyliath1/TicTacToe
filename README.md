@@ -1,7 +1,7 @@
 # Tic-Tac-Toe
 
 ## Description
-This game is a modern implementation of the classic game Tic-Tac-Toe, designed for two players. The game can be played against another human or the computer. This project includes a user-friendly interface, statistical tracking, and several additional features to enhance the playing experience.
+This game is a modern implementation of the classic game Tic-Tac-Toe, designed for two players. Developed as part of the User Interface Programming course, this project leverages the .NET Multi-platform App UI (MAUI) to enhance cross-platform functionality. The game can be played against another human or the computer and includes a user-friendly interface, statistical tracking, and several additional features to enrich the playing experience.
 
 ## Features
 - **Player Management**: Enter player names and track individual statistics across games.
